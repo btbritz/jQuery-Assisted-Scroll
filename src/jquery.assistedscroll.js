@@ -2,7 +2,7 @@
 
     function AssistedScroll(el, options) {
 
-        var slides, totalSlides, currentSlide, currentSlideIndex, transitioning;
+        var slides, totalSlides, currentSlide, currentSlideIndex, transitioning, hitLastSlide;
 
         function init() {
 
@@ -14,6 +14,7 @@
             totalSlides       = slides.length;
             currentSlide      = slides.first();
             currentSlideIndex = 0;
+            hitLastSlide=false;
 
             // Set Their Z-Index
             for (var i = 0; i < totalSlides; i++) {
@@ -24,8 +25,15 @@
             el.on("mousewheel", function(e) {
 
                 // Prevent Default Browser Functionality
-                e.preventDefault();
-                e.stopPropagation();
+                if((currentSlideIndex<totalSlides-1 && e.deltaY < 0)||(transitioning && currentSlideIndex==totalSlides-1)){
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                if(transitioning){
+                    return;
+                }
+
 
                 if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
                     if (e.deltaY > 0) {
@@ -45,9 +53,19 @@
         function nextSlide() {
 
             // Unable To slide
-            if ((currentSlideIndex + 1) >= totalSlides || transitioning) {
+            if ((currentSlideIndex + 1) >= totalSlides) {
+                if(!hitLastSlide)
+                {
+                    transitioning = true;
+                    setTimeout(function() {
+                        transitioning = false;
+                    }, 300);
+                }
+                hitLastSlide=true;
                 return;
             }
+            if(transitioning)
+                return;
 
             transitioning = true;
 
@@ -67,6 +85,7 @@
         function prevSlide() {
 
             // Unable To slide
+            hitLastSlide=false;
             if ((currentSlideIndex - 1) < 0 || transitioning) {
                 return;
             }
